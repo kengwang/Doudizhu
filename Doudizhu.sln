@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Doudizhu.Api", "Doudizhu.Api\Source\Doudizhu.Api.csproj", "{2B8E0492-8B03-4B79-8008-016985CA8D24}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Doudizhu.Api\Tests\Tests.csproj", "{499898A7-A87E-4B18-A884-49180E1C835D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Doudizhu.Tests", "Doudizhu.Api\Doudizhu.Tests\Doudizhu.Tests.csproj", "{499898A7-A87E-4B18-A884-49180E1C835D}"
 EndProject
 Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "Doudizhu.ClientApp", "Doudizhu.ClientApp\Doudizhu.ClientApp.esproj", "{0FF9B578-FE45-419E-95A1-28C8F119486A}"
 EndProject
