@@ -4,7 +4,7 @@ namespace Doudizhu.Api.Service.CardService;
 
 public class CardSetencizer(IEnumerable<CardPattern> sequences)
 {
-    public CardSentence? Sequenize(List<Card> cards)
+    public CardSentence? Sentenize(List<Card> cards)
     {
         foreach (var cardPattern in sequences)
         {
