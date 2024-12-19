@@ -1,4 +1,5 @@
 ﻿using Doudizhu.Api.Models;
+using Doudizhu.Api.Models.GameLogic;
 
 namespace Doudizhu.Api.Service.CardService.CardPatterns;
 
@@ -25,5 +26,15 @@ public class PairPattern : CardPattern
             return false;
 
         return current.Cards[0].Number > last.Cards[0].Number;
+    }
+
+    public override async Task<List<(List<Card> baseCards, int count)>> GetBaseAndNeedle(
+        List<Card> cards,
+        CardSentence? lastSentence)
+    {
+        var baseCard = (int?)lastSentence?.Cards.FirstOrDefault()?.Number ?? -1;
+        var counts = cards.Where(t=>(int)t.Number > baseCard).CountBy(t => t.Number).Where(t => t.Value >= 2).ToList();
+        var avas = counts.Select(t => (baseCards: cards.Where(c => c.Number == t.Key).Take(2).ToList(), 0)).ToList();
+        return avas;
     }
 }

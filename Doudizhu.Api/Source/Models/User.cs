@@ -1,8 +1,10 @@
-﻿namespace Doudizhu.Api.Models;
+﻿using System.ComponentModel.DataAnnotations;
 
-public class User
+namespace Doudizhu.Api.Models;
+
+public class User : GuidModelBase
 {
-    public Guid Id { get; set; }
-    public string? Name { get; set; }
+    [MaxLength(60)]
+    public required string Name { get; set; }
     public long Coin { get; set; }
 }

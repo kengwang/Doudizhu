@@ -1,11 +1,12 @@
 ﻿using Doudizhu.Api.Models;
+using Doudizhu.Api.Models.GameLogic;
 
 namespace Doudizhu.Api.Service.CardService.CardPatterns;
 
-public class PlanePattern : CardPattern
+public class TriplePattern : CardPattern
 {
-    public override string Name => "飞机";
-    public override CardPatternType PatternType => CardPatternType.Plane;
+    public override string Name => "三张";
+    public override CardPatternType PatternType => CardPatternType.Triple;
 
     public override bool IsMatched(List<Card> card)
     {
@@ -25,7 +26,7 @@ public class PlanePattern : CardPattern
 
     public override bool CanCover(CardSentence current, CardSentence last)
     {
-        if (current.PatternType != CardPatternType.Plane || last.PatternType != CardPatternType.Plane)
+        if (current.PatternType != CardPatternType.Triple || last.PatternType != CardPatternType.Triple)
             return false;
         if (current.Cards.Count < 3 && current.Cards.Count != last.Cards.Count)
             return false;
@@ -37,5 +38,17 @@ public class PlanePattern : CardPattern
             return false;
         
         return currentNumbers[0] > lastNumbers[0];
+    }
+
+    public override async Task<List<(List<Card> baseCards, int count)>> GetBaseAndNeedle(List<Card> cards, CardSentence? lastSentence)
+    {
+        var baseCard = -1;
+        if (lastSentence?.Cards is { Count: > 1 })
+        {
+            baseCard = (int?)lastSentence.Cards.FirstOrDefault()?.Number ?? -1;
+        }
+        var counts = cards.CountBy(t => t.Number).Where(t=>(int)t.Key > baseCard).Where(t=>t.Value >= 3).Select(t=>t.Key).ToList();
+        var avas = cards.Where(t => counts.Contains(t.Number)).GroupBy(t => t.Number).Select(t=>(baseCards: t.Take(3).ToList(), count: 0)).ToList();
+        return avas;
     }
 }

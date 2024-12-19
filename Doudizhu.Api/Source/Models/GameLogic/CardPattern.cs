@@ -1,4 +1,4 @@
-﻿namespace Doudizhu.Api.Models;
+﻿namespace Doudizhu.Api.Models.GameLogic;
 
 public abstract class CardPattern
 {
@@ -7,6 +7,7 @@ public abstract class CardPattern
     public abstract bool IsMatched(List<Card> card);
     public abstract List<Card> Order(List<Card> card);
     public abstract bool CanCover(CardSentence current, CardSentence last);
+    public abstract Task<List<(List<Card> baseCards,int count)>> GetBaseAndNeedle(List<Card> cards, CardSentence? lastSentence);
 }
 
 public enum CardPatternType
@@ -18,7 +19,7 @@ public enum CardPatternType
     ThreeWithPair,
     FourWithPair,
     Straight,
-    Plane,
+    Triple,
     PlaneWithPair,
     Bomb,
     JokerBomb

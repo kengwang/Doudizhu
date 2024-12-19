@@ -1,11 +1,12 @@
 ﻿using Doudizhu.Api.Models;
+using Doudizhu.Api.Models.GameLogic;
 
 namespace Doudizhu.Api.Service.CardService.CardPatterns;
 
-public class PlaneWithPair : CardPattern
+public class PlaneWithPairPattern : CardPattern
 {
     public override string Name => "飞机带翅膀";
-    public override CardPatternType PatternType => CardPatternType.Plane;
+    public override CardPatternType PatternType => CardPatternType.PlaneWithPair;
 
     public override bool IsMatched(List<Card> card)
     {
@@ -110,5 +111,19 @@ public class PlaneWithPair : CardPattern
             return false;
         
         return currentLongest.start > lastLongest.start;
+    }
+
+    public override async Task<List<(List<Card> baseCards, int count)>> GetBaseAndNeedle(
+        List<Card> cards,
+        CardSentence? lastSentence)
+    {
+        var baseCard = -1;
+        if (lastSentence?.Cards is { Count: > 1 })
+        {
+            baseCard = (int?)lastSentence.Cards.FirstOrDefault()?.Number ?? -1;
+        }
+        var counts = cards.CountBy(t => t.Number).Where(t=>(int)t.Key > baseCard).Where(t=>t.Value >= 3).Select(t=>t.Key).ToList();
+        var avas = cards.Where(t => counts.Contains(t.Number)).GroupBy(t => t.Number).Select(t=>(baseCards: t.Take(3).ToList(), count: 2)).ToList();
+        return avas;
     }
 }

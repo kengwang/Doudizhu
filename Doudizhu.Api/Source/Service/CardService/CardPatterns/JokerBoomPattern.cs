@@ -1,4 +1,5 @@
 ﻿using Doudizhu.Api.Models;
+using Doudizhu.Api.Models.GameLogic;
 
 namespace Doudizhu.Api.Service.CardService.CardPatterns;
 
@@ -20,4 +21,13 @@ public class JokerBoomPattern : CardPattern
 
     public override bool CanCover(CardSentence current, CardSentence last)
         => current.PatternType is CardPatternType.JokerBomb;
+
+    public override async Task<List<(List<Card> baseCards, int count)>> GetBaseAndNeedle(List<Card> cards, CardSentence? lastCardSentence)
+    {
+        var counts = cards.Where(t=>t.Number is CardNumber.SmallJoker or CardNumber.BigJoker).ToList();
+        if (counts.Count < 2)
+            return new();
+        return [(counts, 0)];
+        
+    }
 }

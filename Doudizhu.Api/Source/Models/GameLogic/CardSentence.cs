@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Doudizhu.Api.Models;
+namespace Doudizhu.Api.Models.GameLogic;
 
 public class CardSentence
 {

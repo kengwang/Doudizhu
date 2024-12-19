@@ -1,8 +1,10 @@
-﻿using Doudizhu.Api.Models;
+﻿using Doudizhu.Api.Interfaces.Markers;
+using Doudizhu.Api.Models;
+using Doudizhu.Api.Models.GameLogic;
 
 namespace Doudizhu.Api.Service.CardService;
 
-public class CardSetencizer(IEnumerable<CardPattern> sequences)
+public class CardSetenizer(IEnumerable<CardPattern> sequences) : IRegisterSelfService
 {
     public CardSentence? Sentenize(List<Card> cards)
     {
