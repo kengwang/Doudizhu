@@ -4,7 +4,7 @@ using Doudizhu.Api.Models.GameLogic;
 
 namespace Doudizhu.Api.Service.CardService;
 
-public class CardSetenizer(IEnumerable<CardPattern> sequences) : IRegisterSelfService
+public class CardSentenizer(IEnumerable<CardPattern> sequences) : IRegisterSelfService
 {
     public CardSentence? Sentenize(List<Card> cards)
     {

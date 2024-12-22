@@ -2,7 +2,7 @@
 
 public class GameRecord
 {
-    public Game Game { get; set; }
-    public GameUser GameUser { get; set; }
-    public List<Card> Cards { get; set; }   
+    public required Game Game { get; set; }
+    public required GameUser GameUser { get; set; }
+    public CardSentence? CardSentence { get; set; }   
 }

@@ -13,7 +13,7 @@ public class PatternBaseAndNeedleTest
     {
         // Arrange
         var pattern = new StraightPattern();
-        var cardSentenizer = new CardSetenizer([new StraightPattern()]);
+        var cardSentenizer = new CardSentenizer([new StraightPattern()]);
         
         // action
         var actual = await pattern.GetBaseAndNeedle(ConvertToCards(current), cardSentenizer.Sentenize(ConvertToCards(cards)));

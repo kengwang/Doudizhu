@@ -1,14 +1,12 @@
 ﻿using Doudizhu.Api.Interfaces;
-using Doudizhu.Api.Models;
 using Doudizhu.Api.Models.GameLogic;
 using Doudizhu.Api.Service.Hubs;
 using Doudizhu.Api.Service.Repositories;
-using FluentValidation.Results;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Doudizhu.Api.Endpoints.Game;
+namespace Doudizhu.Api.Endpoints.Game.GameUsers;
 
 public class JoinGameEndpoint : EndpointWithoutRequest<
     Results<Ok<GameJoinResponse>, NotFound, BadRequest<string>, UnauthorizedHttpResult>>

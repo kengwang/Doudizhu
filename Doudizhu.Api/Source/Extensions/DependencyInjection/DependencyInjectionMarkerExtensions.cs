@@ -14,16 +14,29 @@ public static class DependencyInjectionMarkerExtensions
         {
             if (type.IsAbstract || type.IsInterface)
                 continue;
+
+            if (type.IsAssignableTo(typeof(IRegisterSelfService)))
+            {
+                services.AddSingleton(type);
+            }
+
+            if (type.IsAssignableTo(typeof(IRegisterSelfScopedService)))
+            {
+                services.AddScoped(type);
+            }
             
             foreach (var interfaceType in type.GetInterfaces())
             {
-                if (interfaceType == typeof(IRegisterSelfService))
-                {
-                    services.AddSingleton(type);
-                }
-                if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition() == typeof(IRegisterServiceFor<>))
+                if (interfaceType.IsGenericType)
+                    continue;
+                if(interfaceType.GetGenericTypeDefinition() == typeof(IRegisterServiceFor<>))
                 {
                     services.AddSingleton(interfaceType.GenericTypeArguments[0], type);
+                }
+                
+                if(interfaceType.GetGenericTypeDefinition() == typeof(IRegisterScopedServiceFor<>))
+                {
+                    services.AddScoped(interfaceType.GenericTypeArguments[0], type);
                 }
             }
         }

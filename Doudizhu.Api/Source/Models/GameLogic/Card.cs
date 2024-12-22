@@ -41,6 +41,7 @@ public enum CardColor
 
 public enum CardNumber
 {
+    None,
     Three,
     Four,
     Five,

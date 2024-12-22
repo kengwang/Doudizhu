@@ -8,32 +8,32 @@ using Microsoft.AspNetCore.SignalR;
 namespace Doudizhu.Api.Service.GameService;
 
 public class LandLordInteractor(
-    IHubContext<GameHub, IClientNotificator> _hubContext,
-    ApplicationDbContext dbContext
-    ) : IRegisterSelfService
+    IHubContext<GameHub, IClientNotificator> hubContext
+    ) : IRegisterSelfScopedService,
+        IRegisterScopedServiceFor<IGameInteractor>,
+        IGameInteractor
 {
 
-    private CancellationTokenSource _currentCancellationTokenSource = new();
-    
     public async Task CallLandLordByPoint(Game game, GameUser gameUser, int count)
     {
         gameUser.CalledLandLordCount = count;
-        await _hubContext.Clients.Group(game.Id.ToString()).UserCalledLandLord(gameUser, count);
-        await _currentCancellationTokenSource.CancelAsync();
+        await hubContext.Clients.Group(game.Id.ToString()).UserCalledLandLord(gameUser, count);
+        await CurrentCancellationTokenSource.CancelAsync();
     }
 
-    public async Task EnterLandLordSelect(Game game)
-    {
-       
 
+    public int Index => 1;
+    public CancellationTokenSource CurrentCancellationTokenSource { get; set; } = new();
+    public async Task EnterInteraction(Game game)
+    { 
         foreach (var gameUser in game.Users)
         {
-            _currentCancellationTokenSource = new();
-            await _hubContext.Clients.Group(game.Id.ToString()).RequireCallLandLord(game, gameUser);
-
+            CurrentCancellationTokenSource = new();
+            await hubContext.Clients.Group(game.Id.ToString()).RequireCallLandLord(game, gameUser);
             try
             {
-                await Task.Delay(TimeSpan.FromSeconds(30), _currentCancellationTokenSource.Token);
+                await Task.Delay(TimeSpan.FromSeconds(30), CurrentCancellationTokenSource.Token);
+                gameUser.CalledLandLordCount = 0;
             }
             catch (OperationCanceledException e)
             {
@@ -55,7 +55,5 @@ public class LandLordInteractor(
                 gameUser.Role = GameUserRole.Farmer;
             }
         }
-
-        await dbContext.SaveChangesAsync();
     }
 }

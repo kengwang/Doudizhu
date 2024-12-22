@@ -1,4 +1,5 @@
-﻿using Doudizhu.Api.Interfaces;
+﻿using System.Security.Claims;
+using Doudizhu.Api.Interfaces;
 using Doudizhu.Api.Service.Repositories;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -14,7 +15,7 @@ public class GameHub(ApplicationDbContext dbContext) : Hub<IClientNotificator>
 
     public override async Task OnConnectedAsync()
     {
-        var userId = Context.User?.Claims.FirstOrDefault(t => t.Type == "id")?.Value;
+        var userId = Context.User?.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
         var user = dbContext.GameUsers.Include(gameUser => gameUser.Game).FirstOrDefault(t => t.User.Id == Guid.Parse(userId));
         if (userId is null || user is null)
         {
@@ -30,8 +31,12 @@ public class GameHub(ApplicationDbContext dbContext) : Hub<IClientNotificator>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         var userId = Context.User?.Claims.FirstOrDefault(t => t.Type == "id")?.Value;
+        if (userId is null)
+        {
+            return;
+        }
         var user = dbContext.GameUsers.Include(gameUser => gameUser.Game).FirstOrDefault(t => t.User.Id == Guid.Parse(userId));
-        if (userId is null || user is null)
+        if (user is null)
         {
             return;
         }
