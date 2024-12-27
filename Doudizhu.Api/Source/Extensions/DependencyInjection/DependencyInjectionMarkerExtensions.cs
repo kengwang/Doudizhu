@@ -27,7 +27,7 @@ public static class DependencyInjectionMarkerExtensions
             
             foreach (var interfaceType in type.GetInterfaces())
             {
-                if (interfaceType.IsGenericType)
+                if (!interfaceType.IsGenericType)
                     continue;
                 if(interfaceType.GetGenericTypeDefinition() == typeof(IRegisterServiceFor<>))
                 {

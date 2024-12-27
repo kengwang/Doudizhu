@@ -2,7 +2,7 @@
 
 namespace Doudizhu.Api.Models.GameLogic;
 
-public class Card : IComparable<Card>, IComparable
+public class Card : IComparable<Card>, IComparable, IEquatable<Card>
 {
     public Card(CardNumber number, CardColor color)
     {
@@ -28,6 +28,13 @@ public class Card : IComparable<Card>, IComparable
         if (ReferenceEquals(this, obj)) return 0;
         return obj is Card other ? CompareTo(other) : throw new ArgumentException($"Object must be of type {nameof(Card)}");
     }
+
+    public bool Equals(Card? other)
+    {
+        if (other is null) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return Color == other.Color && Number == other.Number;
+    }
 }
 
 public enum CardColor
@@ -41,7 +48,6 @@ public enum CardColor
 
 public enum CardNumber
 {
-    None,
     Three,
     Four,
     Five,

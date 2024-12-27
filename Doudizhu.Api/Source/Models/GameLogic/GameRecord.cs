@@ -1,6 +1,6 @@
 ﻿namespace Doudizhu.Api.Models.GameLogic;
 
-public class GameRecord
+public class GameRecord : GuidModelBase
 {
     public required Game Game { get; set; }
     public required GameUser GameUser { get; set; }

@@ -10,17 +10,17 @@ using Microsoft.EntityFrameworkCore;
 namespace Doudizhu.Api.Endpoints.Game;
 
 public class CreateGameEndpoint(ApplicationDbContext dbContext)
-    : EndpointWithoutRequest<Results<CreatedAtRoute<CreateGameResponse>, BadRequest<string>, ForbidHttpResult>>
+    : EndpointWithoutRequest<Results<CreatedAtRoute<Models.GameLogic.Game>, BadRequest<string>, ForbidHttpResult>>
 {
     public override void Configure()
     {
         Post("/games");
     }
 
-    public override async Task<Results<CreatedAtRoute<CreateGameResponse>, BadRequest<string>, ForbidHttpResult>> ExecuteAsync(
+    public override async Task<Results<CreatedAtRoute<Models.GameLogic.Game>, BadRequest<string>, ForbidHttpResult>> ExecuteAsync(
         CancellationToken ct)
     {
-        var userIdStr = User.Claims.FirstOrDefault(t => t.Type == "id")?.Value;
+        var userIdStr = User.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
 
         if (userIdStr is null || !Guid.TryParse(userIdStr, out var userId))
         {
@@ -50,7 +50,7 @@ public class CreateGameEndpoint(ApplicationDbContext dbContext)
         var gameUser = new GameUser
         {
             Id = Guid.CreateVersion7(),
-            Game = game,
+            GameId = game.Id,
             User = user,
             Cards = [],
             Role = GameUserRole.Undefined
@@ -59,18 +59,8 @@ public class CreateGameEndpoint(ApplicationDbContext dbContext)
 
         await dbContext.Games.AddAsync(game, ct);
         await dbContext.GameUsers.AddAsync(gameUser, ct);
-        var resp = new CreateGameResponse
-        {
-            Id = game.Id,
-            CreateAt = game.CreateAt,
-        };
+        await dbContext.SaveChangesAsync(ct);
 
-        return TypedResults.CreatedAtRoute(resp, $"/games/{game.Id}");
+        return TypedResults.CreatedAtRoute(game, nameof(GetGameEndpoint), new {id = game.Id});
     }
-}
-
-public class CreateGameResponse
-{
-    public Guid Id { get; set; }
-    public DateTimeOffset CreateAt { get; set; }
 }

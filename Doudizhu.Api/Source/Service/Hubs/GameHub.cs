@@ -16,31 +16,31 @@ public class GameHub(ApplicationDbContext dbContext) : Hub<IClientNotificator>
     public override async Task OnConnectedAsync()
     {
         var userId = Context.User?.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
-        var user = dbContext.GameUsers.Include(gameUser => gameUser.Game).FirstOrDefault(t => t.User.Id == Guid.Parse(userId));
+        var user = dbContext.GameUsers.FirstOrDefault(t => t.User.Id == Guid.Parse(userId!));
         if (userId is null || user is null)
         {
             Context.Abort();
             return;
         }
         
-        await Groups.AddToGroupAsync(Context.ConnectionId, user.Game.Id.ToString());
+        await Groups.AddToGroupAsync(Context.ConnectionId, user.GameId.ToString());
         // add user connection id to dictionary
         _connectionIdToUserId[Guid.Parse(userId)] = Context.ConnectionId;
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        var userId = Context.User?.Claims.FirstOrDefault(t => t.Type == "id")?.Value;
+        var userId = Context.User?.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
         if (userId is null)
         {
             return;
         }
-        var user = dbContext.GameUsers.Include(gameUser => gameUser.Game).FirstOrDefault(t => t.User.Id == Guid.Parse(userId));
+        var user = dbContext.GameUsers.FirstOrDefault(t => t.User.Id == Guid.Parse(userId));
         if (user is null)
         {
             return;
         }
-        var gameId = user.Game.Id.ToString();
+        var gameId = user.GameId.ToString();
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, gameId);
     }
 }

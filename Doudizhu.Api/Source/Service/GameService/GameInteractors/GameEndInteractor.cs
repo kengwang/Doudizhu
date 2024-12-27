@@ -9,8 +9,7 @@ public class GameEndInteractor : IRegisterSelfScopedService,IRegisterScopedServi
 {
     private const int BaseCoin = 10;
     public int Index => 4;
-    public CancellationTokenSource CurrentCancellationTokenSource { get; set; } = new();
-
+    
     public async Task EnterInteraction(Game game)
     {
         // 结算

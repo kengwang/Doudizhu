@@ -27,7 +27,7 @@ public class AutoCardMachineTest
         Console.WriteLine("====================================");
         var res = await autoCardMachine.FindBestMatchCard(game, new()
         {
-            Game = game,
+            GameId = game.Id,
             User = new()
             {
                 Name = "Test",

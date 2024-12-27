@@ -18,7 +18,7 @@ public class PlayCardEndpoint(ApplicationDbContext dbContext,
 
     public override void Configure()
     {
-        Post("/game/{id:guid}/records");
+        Post("/games/{id:guid}/records");
     }
 
     public override async Task<Results<Ok, BadRequest, NotFound>> ExecuteAsync(PlayCardRequest req,
@@ -75,7 +75,7 @@ public class PlayCardEndpoint(ApplicationDbContext dbContext,
             game,
             gameUser,
             cardSentence);
-
+        await dbContext.SaveChangesAsync(ct);
         return TypedResults.Ok();
     }
 }

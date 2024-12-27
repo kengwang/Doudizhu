@@ -17,7 +17,7 @@ public class UserLoginEndpoint(ApplicationDbContext dbContext) :
 
     public override async Task<Results<Ok<Models.User>,NotFound>> ExecuteAsync(UserLoginRequest req, CancellationToken ct)
     {
-        var user = await dbContext.Users.FirstOrDefaultAsync(t => t.Name == req.Name, cancellationToken: ct);
+        var user = await dbContext.Users.FirstOrDefaultAsync(t => t.Qq == req.Qq, cancellationToken: ct);
 
         if (user is null)
         {
@@ -37,6 +37,6 @@ public class UserLoginEndpoint(ApplicationDbContext dbContext) :
 
 public class UserLoginRequest
 {
-    [JsonPropertyName("name")]
-    public string Name { get; set; }
+    [JsonPropertyName("qq")]
+    public string Qq { get; set; }
 }

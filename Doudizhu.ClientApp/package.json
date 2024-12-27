@@ -7,7 +7,8 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "genapi": "swagger-typescript-api -p http://localhost:44460/openapi/v1.json -o utils --module-name-first-tag --sort-routes --default-response string"
   },
   "dependencies": {
     "@formkit/auto-animate": "^0.8.2",
@@ -19,17 +20,18 @@
     "@pinia/nuxt": "^0.8.0",
     "@vueuse/core": "^12.0.0",
     "@vueuse/nuxt": "^12.0.0",
-    "nuxi": "^3.15.0",
+    "nuxi": "^3.17.1",
     "nuxt": "^3.14.1592",
-    "pinia": "^2.2.8",
-    "pinia-plugin-persistedstate": "^4.1.3",
+    "pinia": "^2.3.0",
+    "pinia-plugin-persistedstate": "^4.2.0",
     "spa-proxy": "^1.0.8",
     "vue": "latest",
     "vue-router": "latest"
   },
   "packageManager": "pnpm@9.14.2+sha512.6e2baf77d06b9362294152c851c4f278ede37ab1eba3a55fda317a4a17b209f4dbb973fb250a77abc463a341fcb1f17f17cfa24091c4eb319cda0d9b84278387",
   "devDependencies": {
+    "swagger-typescript-api": "^13.0.23",
     "vite-plugin-vuetify": "^2.0.4",
-    "vuetify": "^3.7.4"
+    "vuetify": "^3.7.6"
   }
 }

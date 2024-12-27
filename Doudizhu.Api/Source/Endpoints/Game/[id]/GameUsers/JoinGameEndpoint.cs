@@ -1,5 +1,8 @@
-﻿using Doudizhu.Api.Interfaces;
+﻿using System.Security.Claims;
+using AsyncAwaitBestPractices;
+using Doudizhu.Api.Interfaces;
 using Doudizhu.Api.Models.GameLogic;
+using Doudizhu.Api.Service.GameService;
 using Doudizhu.Api.Service.Hubs;
 using Doudizhu.Api.Service.Repositories;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -8,36 +11,32 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Doudizhu.Api.Endpoints.Game.GameUsers;
 
-public class JoinGameEndpoint : EndpointWithoutRequest<
-    Results<Ok<GameJoinResponse>, NotFound, BadRequest<string>, UnauthorizedHttpResult>>
+public class JoinGameEndpoint(ApplicationDbContext dbContext, IHubContext<GameHub, IClientNotificator> gameHub, GameRoller gameRoller)
+    : EndpointWithoutRequest<
+        Results<Ok<GameUser>, NotFound, BadRequest<string>, UnauthorizedHttpResult>>
 {
-    private readonly ApplicationDbContext _dbContext;
-    private readonly IHubContext<GameHub, IClientNotificator> _gameHub;
-
-    public JoinGameEndpoint(ApplicationDbContext dbContext, IHubContext<GameHub, IClientNotificator> gameHub)
+    public override void Configure()
     {
-        _dbContext = dbContext;
-        _gameHub = gameHub;
         Post("/games/{id}/gameUser");
     }
 
-    public override async Task<Results<Ok<GameJoinResponse>, NotFound, BadRequest<string>, UnauthorizedHttpResult>>
+    public override async Task<Results<Ok<GameUser>, NotFound, BadRequest<string>, UnauthorizedHttpResult>>
         ExecuteAsync(CancellationToken ct)
     {
-        var userId = User.Claims.FirstOrDefault(t => t.Type == "id")?.Value;
+        var userId = User.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
 
         if (userId is null || !Guid.TryParse(userId, out var userIdGuid))
         {
             return TypedResults.Unauthorized();
         }
 
-        var user = await _dbContext.Users.FirstOrDefaultAsync(t => t.Id == userIdGuid, cancellationToken: ct);
+        var user = await dbContext.Users.FirstOrDefaultAsync(t => t.Id == userIdGuid, cancellationToken: ct);
 
         if (user is null)
         {
             return TypedResults.Unauthorized();
         }
-        var gameUser = await _dbContext.GameUsers.FirstOrDefaultAsync(
+        var gameUser = await dbContext.GameUsers.FirstOrDefaultAsync(
                            t => t.User.Id == userIdGuid,
                            cancellationToken: ct);
 
@@ -53,7 +52,7 @@ public class JoinGameEndpoint : EndpointWithoutRequest<
             return TypedResults.BadRequest("游戏Id格式错误");
         }
 
-        var game = await _dbContext.Games.Include(game => game.Users)
+        var game = await dbContext.Games.Include(game => game.Users)
                                    .FirstOrDefaultAsync(t => t.Id == gameIdGuid, cancellationToken: ct);
 
         if (game is null)
@@ -68,33 +67,24 @@ public class JoinGameEndpoint : EndpointWithoutRequest<
 
         var newGameUser = new GameUser
         {
-            Id = Guid.NewGuid(),
-            Game = game,
+            Id = Guid.CreateVersion7(),
+            GameId = game.Id,
             User = user,
             Cards = [],
             Role = GameUserRole.Undefined
         };
 
         game.Users.Add(newGameUser);
-        await _dbContext.GameUsers.AddAsync(newGameUser, ct);
-        await _dbContext.SaveChangesAsync(ct);
-        await _gameHub.Groups.AddToGroupAsync(HttpContext.Connection.Id, game.Id.ToString(), ct);
-        await _gameHub.Clients.Group(game.Id.ToString()).UserJoined(newGameUser);
+        await dbContext.GameUsers.AddAsync(newGameUser, ct);
+        await dbContext.SaveChangesAsync(ct);
+        await gameHub.Groups.AddToGroupAsync(HttpContext.Connection.Id, game.Id.ToString(), ct);
+        await gameHub.Clients.Group(game.Id.ToString()).UserJoined(newGameUser);
+        
+        if (game.Users.Count == 3)
+        {
+            gameRoller.StartGameRoll(game).SafeFireAndForget();
+        }
 
-
-        return TypedResults.Ok(
-            new GameJoinResponse()
-            {
-                Id = game.Id,
-                CreateAt = game.CreateAt,
-                Users = game.Users
-            });
+        return TypedResults.Ok(gameUser);
     }
-}
-
-public class GameJoinResponse
-{
-    public Guid Id { get; set; }
-    public DateTimeOffset CreateAt { get; set; }
-    public List<GameUser> Users { get; set; }
 }

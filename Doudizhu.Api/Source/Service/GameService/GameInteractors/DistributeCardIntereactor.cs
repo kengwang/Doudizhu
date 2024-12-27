@@ -9,15 +9,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Doudizhu.Api.Service.GameService;
 
-public class DistributeCardIntereactor(GameHub hub,
-                                       IHubContext<GameHub, IClientNotificator> hubContext)
+public class DistributeCardIntereactor(IHubContext<GameHub, IClientNotificator> hubContext)
     : IRegisterSelfScopedService, IRegisterScopedServiceFor<IGameInteractor>, IGameInteractor
 
 {
     public int Index => 0;
-
-    public CancellationTokenSource CurrentCancellationTokenSource { get; set; } = new();
-
     public async Task EnterInteraction(Game game)
     {
         game.Status = GameStatus.Starting;
@@ -26,13 +22,10 @@ public class DistributeCardIntereactor(GameHub hub,
 
         for (var i = 0; i < 3; i++)
         {
-            game.Users[i].Cards = cards.Skip(i * 17).Take(17).ToList();
-            var connectionId = hub.GetConnectionIdByUserId(game.Users[i].User.Id);
+            var currentUser = game.Users[i];
+            currentUser.Cards = cards.Skip(i * 17).Take(17).ToList();
 
-            if (connectionId is null)
-                continue;
-
-            await hubContext.Clients.Client(connectionId).ReceiveCards(game.Users[i].Cards);
+            await hubContext.Clients.User(currentUser.User.Id.ToString()).ReceiveCards(game.Users[i].Cards);
         }
         game.ReservedCards.AddRange(cards.Skip(51).ToList());
     }

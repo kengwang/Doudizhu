@@ -28,11 +28,11 @@ public class GameCardPlayIntereactor(IHubContext<GameHub, IClientNotificator> hu
         if (cards is { Count: > 0 })
             gameUser.Cards = gameUser.Cards.Except(cards).ToList();
         await hubContext.Clients.Group(game.Id.ToString()).UserPlayCards(gameUser, cardSentence);
+        await IGameInteractor.GameCancellationTokenSource[game.Id].CancelAsync();
     }
 
     public int Index => 3;
-    public CancellationTokenSource CurrentCancellationTokenSource { get; set; } = new();
-
+    
     public async Task EnterInteraction(Game game)
     {
         game.Status = GameStatus.Running;
@@ -41,19 +41,24 @@ public class GameCardPlayIntereactor(IHubContext<GameHub, IClientNotificator> hu
         while (true)
         {
             game.CurrentUser = game.Users[currentPlayerIndex % game.Users.Count];
-
+            IGameInteractor.GameCancellationTokenSource[game.Id] = new();
             try
             {
-                await hubContext.Clients.User(game.CurrentUser.User.Id.ToString())
-                                .RequirePlayCards(game, game.CurrentUser);
-                await Task.Delay(TimeSpan.FromSeconds(30), CurrentCancellationTokenSource.Token);
-            }
-            catch (Exception e)
-            {
+                if (!game.CurrentUser.BotTakeOver)
+                {
+                    await hubContext.Clients.User(game.CurrentUser.User.Id.ToString())
+                                    .RequirePlayCards(game, game.CurrentUser);
+                    await Task.Delay(TimeSpan.FromSeconds(30), IGameInteractor.GameCancellationTokenSource[game.Id].Token);
+                }
                 var cards = await autoCardMachineService.FindBestMatchCard(game, game.CurrentUser);
                 var cardSentence = cards.Count == 0 ? null : cardSentenizer.Sentenize(cards);
                 await PlayCard(game, game.CurrentUser, cardSentence);
             }
+            catch (Exception e)
+            {
+                // ignored
+            }
+
             if (game.CurrentUser.Cards.Count == 0)
             {
                 break;

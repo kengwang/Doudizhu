@@ -8,19 +8,28 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
 {
     private readonly Dictionary<CardPatternType, CardPattern> _patterns = patterns.ToDictionary(t => t.PatternType);
     private readonly Dictionary<Guid, GamePredictorState> _predictorStates = new();
+
+    public async Task<int> CallLordCount(Game game, GameUser gameUser)
+    {
+        return gameUser.Cards.CountBy(t => t.Number).Count(t => t is { Key: > CardNumber.K, Value: 4 });
+    }
+
     public async Task<List<Card>> FindBestMatchCard(Game game, GameUser gameUser)
     {
         if (!_predictorStates.ContainsKey(game.Id))
             _predictorStates[game.Id] = new();
+
         if (game.LastCardSentence is not null)
         {
             // 获取我的当前身份
             var myRole = gameUser.Role;
+            bool forseFollow = false;
 
             // 获取我的上家的身份
             var lastUser = game.Records.LastOrDefault()?.GameUser;
+            playFollowCard:
 
-            if (lastUser?.Role != myRole)
+            if (lastUser?.Role != myRole || forseFollow)
             {
                 // 跟牌
                 var result = (await _patterns[game.LastCardSentence.PatternType]
@@ -46,8 +55,6 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
                         {
                             minCard = baseCards;
                             min = cnt.Item1;
-
-                            // trace = cnt.Item2;
                         }
                     }
                     var neededSingleCount = game.LastCardSentence.Cards.Count - minCard.Count;
@@ -55,26 +62,34 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
 
                     for (var i = 0; i < neededSingleCount; i++)
                     {
-                        var (_, cards) = await GetCardSingleCount(
-                                             reservedCards,
-                                             new()
-                                             {
-                                                 PatternType = CardPatternType.Single,
-                                                 Cards = [new Card(CardNumber.None, CardColor.Special)]
-                                             },
-                                             []);
+                        var res = await _patterns[CardPatternType.Single]
+                                      .GetBaseAndNeedle(reservedCards, game.LastCardSentence);
+                        Card? minSingle = null;
+                        var minSingleCount = int.MaxValue;
 
-                        if (cards.Count == 0 || cards[0].Count == 0)
+                        foreach ((List<Card> baseCards, int count) in res)
                         {
-                            return [];
+                            var tmpCards = reservedCards.ToList();
+                            tmpCards.Remove(baseCards[0]);
+                            var (singleCnt, _) = await GetCardSingleCount(tmpCards, null, []);
+
+                            if (singleCnt < minSingleCount)
+                            {
+                                minSingle = baseCards[0];
+                                minSingleCount = singleCnt;
+                            }
                         }
-                        minCard.Add(cards[0][0]);
-                        reservedCards.Remove(cards[0][0]);
+
+                        if (minSingle is not null)
+                        {
+                            minCard.Add(minSingle);
+                            reservedCards.Remove(minSingle);
+                        }
                     }
                 }
                 else
                 {
-                    if (lastUser is { Cards: { Count: < 8 } })
+                    if (lastUser is { Cards: { Count: < 8 } } && gameUser.Role != lastUser.Role)
                     {
                         // 要炸!
                         var bomb = gameUser.Cards.CountBy(t => t.Number).Where(t => t.Value == 4).ToList();
@@ -102,29 +117,36 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
             {
                 // 上家和自己同一阵营
                 // 记牌器, 计算场上剩下的牌
-                if (true)
+
+                // 正常记牌
+                var leftCards = Game.GetAllCards();
+
+                foreach (var card in game.Records.SelectMany(t => t.CardSentence?.Cards ?? []))
                 {
-                    // 正常记牌
-                    var leftCards = Game.GetAllCards();
-
-                    foreach (var card in game.Records.SelectMany(t => t.CardSentence?.Cards ?? []))
-                    {
-                        leftCards.Remove(card);
-                    }
-
-                    foreach (var card in gameUser.Cards)
-                    {
-                        leftCards.Remove(card);
-                    }
-
-                    // 计算场上剩下的牌
-                    var leftCardCount = leftCards.CountBy(t => t.Number).ToList();
+                    leftCards.Remove(card);
                 }
+
+                foreach (var card in gameUser.Cards)
+                {
+                    leftCards.Remove(card);
+                }
+
+                // 计算场上剩下的牌
+                var partner = game.Users.FirstOrDefault(t => t != gameUser && t.Role == GameUserRole.Farmer);
+                var leftPartnerCardCount = partner?.Cards.Count ?? 0;
+
+                if (leftPartnerCardCount < 5)
+                    return [];
+
+                forseFollow = true;
+
+                goto playFollowCard;
             }
         }
         else
         {
-            if (gameUser.Role == GameUserRole.Landlord || !game.Users.Any(t => t != gameUser && t is { Role: GameUserRole.Farmer, Cards.Count: < 4 }))
+            if (gameUser.Role == GameUserRole.Landlord ||
+                !game.Users.Any(t => t != gameUser && t is { Role: GameUserRole.Farmer, Cards.Count: < 4 }))
             {
                 // 挺好的, 正常出, 不需要考虑喂牌
                 var trace = new List<List<Card>>();
@@ -168,7 +190,6 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
 
                 if (partner?.Cards.Count < 4)
                 {
-                    
                     if (_predictorStates[game.Id].PartnerTriedPairLastCount != partner.Cards.Count)
                     {
                         return [gameUser.Cards.MinBy(t => t.Number)!];
@@ -181,6 +202,7 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
                         if (res.Count > 0)
                         {
                             var min = res.MinBy(t => t.baseCards[0].Number);
+
                             return min.baseCards;
                         }
                         else
@@ -267,7 +289,6 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
         Console.WriteLine();
     }
 }
-
 
 public class GamePredictorState
 {

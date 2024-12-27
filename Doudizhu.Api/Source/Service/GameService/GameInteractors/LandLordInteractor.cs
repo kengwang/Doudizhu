@@ -1,6 +1,7 @@
 ﻿using Doudizhu.Api.Interfaces;
 using Doudizhu.Api.Interfaces.Markers;
 using Doudizhu.Api.Models.GameLogic;
+using Doudizhu.Api.Service.CardService;
 using Doudizhu.Api.Service.Hubs;
 using Doudizhu.Api.Service.Repositories;
 using Microsoft.AspNetCore.SignalR;
@@ -8,7 +9,8 @@ using Microsoft.AspNetCore.SignalR;
 namespace Doudizhu.Api.Service.GameService;
 
 public class LandLordInteractor(
-    IHubContext<GameHub, IClientNotificator> hubContext
+    IHubContext<GameHub, IClientNotificator> hubContext,
+    AutoCardMachineService machineService
     ) : IRegisterSelfScopedService,
         IRegisterScopedServiceFor<IGameInteractor>,
         IGameInteractor
@@ -18,25 +20,34 @@ public class LandLordInteractor(
     {
         gameUser.CalledLandLordCount = count;
         await hubContext.Clients.Group(game.Id.ToString()).UserCalledLandLord(gameUser, count);
-        await CurrentCancellationTokenSource.CancelAsync();
+        await IGameInteractor.GameCancellationTokenSource[game.Id].CancelAsync();
     }
 
 
     public int Index => 1;
-    public CancellationTokenSource CurrentCancellationTokenSource { get; set; } = new();
     public async Task EnterInteraction(Game game)
     { 
         foreach (var gameUser in game.Users)
         {
-            CurrentCancellationTokenSource = new();
+            IGameInteractor.GameCancellationTokenSource[game.Id] = new();
             await hubContext.Clients.Group(game.Id.ToString()).RequireCallLandLord(game, gameUser);
             try
             {
-                await Task.Delay(TimeSpan.FromSeconds(30), CurrentCancellationTokenSource.Token);
-                gameUser.CalledLandLordCount = 0;
+                if (gameUser.BotTakeOver)
+                {
+                    var cnt = await machineService.CallLordCount(game, gameUser);
+                    await CallLandLordByPoint(game, gameUser, cnt);
+                }
+                else
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(15), IGameInteractor.GameCancellationTokenSource[game.Id].Token);
+                    gameUser.CalledLandLordCount = 0;
+                }
+
             }
-            catch (OperationCanceledException e)
+            catch (Exception e)
             {
+                // ignored
             }
         }
         

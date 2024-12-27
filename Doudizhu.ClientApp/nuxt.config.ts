@@ -1,6 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 export default defineNuxtConfig({
+    app: {
+        pageTransition: { name: 'page', mode: 'out-in' }
+    },
     build: {
         transpile: ['vuetify'],
     },
@@ -15,7 +18,6 @@ export default defineNuxtConfig({
         },
         '@nuxtjs/i18n',
         '@nuxt/image',
-        // '@nuxtjs/eslint-module',
         '@vueuse/nuxt',
         '@pinia/nuxt',
         'pinia-plugin-persistedstate/nuxt'
@@ -26,6 +28,11 @@ export default defineNuxtConfig({
                 transformAssetUrls,
             },
         },
+    },
+    nitro: {
+        devProxy: {
+            '/api': 'http://localhost:44460'
+        }
     },
     i18n: {
         // Module Options

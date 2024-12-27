@@ -14,6 +14,9 @@ public class Game : GuidModelBase
     public GameStatus Status { get; set; }
     public GameUser? CurrentUser { get; set; }
 
+    public Guid CurrentUserId { get; set; }
+    public Guid LastUserId { get; set; }
+
     private static List<Card>? _allCards = null;
     
     [JsonIgnore]
