@@ -15,7 +15,10 @@ public class GameCardPlayIntereactor(IHubContext<GameHub, IClientNotificator> hu
 {
     public async Task PlayCard(Game game, GameUser gameUser, CardSentence? cardSentence)
     {
-        game.LastCardSentence = cardSentence;
+        if (cardSentence is not null)
+        {
+            game.LastCardSentence = cardSentence;
+        }
         game.LastUser = gameUser;
         game.Records.Add(
             new()
@@ -35,7 +38,6 @@ public class GameCardPlayIntereactor(IHubContext<GameHub, IClientNotificator> hu
     
     public async Task EnterInteraction(Game game)
     {
-        game.Status = GameStatus.Running;
         var currentPlayerIndex = game.Users.FindIndex(t => t.Role == GameUserRole.Landlord);
 
         while (true)
@@ -44,10 +46,10 @@ public class GameCardPlayIntereactor(IHubContext<GameHub, IClientNotificator> hu
             IGameInteractor.GameCancellationTokenSource[game.Id] = new();
             try
             {
+                await hubContext.Clients.Group(game.Id.ToString())
+                                .RequirePlayCards(game.CurrentUser);
                 if (!game.CurrentUser.BotTakeOver)
                 {
-                    await hubContext.Clients.User(game.CurrentUser.User.Id.ToString())
-                                    .RequirePlayCards(game, game.CurrentUser);
                     await Task.Delay(TimeSpan.FromSeconds(30), IGameInteractor.GameCancellationTokenSource[game.Id].Token);
                 }
                 var cards = await autoCardMachineService.FindBestMatchCard(game, game.CurrentUser);
@@ -63,6 +65,7 @@ public class GameCardPlayIntereactor(IHubContext<GameHub, IClientNotificator> hu
             {
                 break;
             }
+            currentPlayerIndex++;
         }
     }
 }

@@ -19,7 +19,6 @@ export default defineNuxtConfig({
         '@nuxtjs/i18n',
         '@nuxt/image',
         '@vueuse/nuxt',
-        '@pinia/nuxt',
         'pinia-plugin-persistedstate/nuxt'
     ],
     vite: {

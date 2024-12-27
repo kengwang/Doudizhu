@@ -6,8 +6,8 @@
         <div style="margin-top: 10px;" v-for="game in games" :key="game.id">
             <v-card>
                 <v-card-text>
-                    <div>玩家数: {{game.users?.length}}</div>
-                    <div>状态: {{parseStatus(game.status ?? 0)}}</div>
+                    <div>玩家数: {{ game.users?.length }}</div>
+                    <div>状态: {{ parseStatus(game.status ?? 0) }}</div>
                 </v-card-text>
                 <v-card-actions v-if="game.status === 0">
                     <v-btn @click="joinGame(game.id ?? '')" variant="elevated" block>进入</v-btn>
@@ -46,8 +46,8 @@ function joinGame(gameId: string) {
     api.games.joinGameEndpoint(gameId).then((res) => {
         router.push('/games/' + gameId);
     }).catch((err) => {
-        console.log(err);
-    });    
+        alert("加入失败");
+    });
 }
 
 function parseStatus(status: DoudizhuApiModelsGameLogicGameStatus) {
@@ -63,11 +63,9 @@ function parseStatus(status: DoudizhuApiModelsGameLogicGameStatus) {
 }
 
 onMounted(async () => {
-    
     api.games.getGamesEndpoint().then((res) => {
         games.value = res.data ?? [];
     });
-    await connectGameHub();
 });
 </script>
 

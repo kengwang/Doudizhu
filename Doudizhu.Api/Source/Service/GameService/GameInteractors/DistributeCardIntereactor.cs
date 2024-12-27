@@ -3,7 +3,6 @@ using Doudizhu.Api.Interfaces.Markers;
 using Doudizhu.Api.Models;
 using Doudizhu.Api.Models.GameLogic;
 using Doudizhu.Api.Service.Hubs;
-using Doudizhu.Api.Service.Repositories;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,7 +22,7 @@ public class DistributeCardIntereactor(IHubContext<GameHub, IClientNotificator> 
         for (var i = 0; i < 3; i++)
         {
             var currentUser = game.Users[i];
-            currentUser.Cards = cards.Skip(i * 17).Take(17).ToList();
+            currentUser.Cards = cards.Skip(i * 17).Take(17).OrderByDescending(t=>t.Number).ToList();
 
             await hubContext.Clients.User(currentUser.User.Id.ToString()).ReceiveCards(game.Users[i].Cards);
         }

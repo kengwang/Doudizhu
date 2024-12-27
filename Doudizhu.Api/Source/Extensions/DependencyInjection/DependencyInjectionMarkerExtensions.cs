@@ -5,6 +5,23 @@ namespace Doudizhu.Api.Extensions.DependencyInjection;
 
 public static class DependencyInjectionMarkerExtensions
 {
+    public static void AddDependencyInjectionImplements<T, TMarker>(this IServiceCollection services)
+    {
+        var assembly = typeof(TMarker).Assembly;
+        // find all classes implements
+        var types = assembly.GetTypes();
+        foreach (var type in types)
+        {
+            if (type.IsAbstract || type.IsInterface)
+                continue;
+
+            if (type.IsAssignableTo(typeof(T)))
+            {
+                services.AddSingleton(typeof(T),type);
+            }
+        }
+    }
+    
     public static void AddDependencyInjectionMarkerFrom<T>(this IServiceCollection services)
     {
         var assembly = typeof(T).Assembly;

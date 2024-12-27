@@ -1,6 +1,6 @@
 <template>
     <div>
-        <img :height="props.height" :src="`/images/cards/${parseColor(props.color)}${parseNumber(props.number)}.png`" alt="intro" />
+        <img :height="props.height" class="card" :src="`/images/cards/${parseColor(props.color)}${parseNumber(props.number)}.png`" alt="intro" />
     </div>
 </template>
 
@@ -62,6 +62,9 @@ function parseNumber(number: DoudizhuApiModelsGameLogicCardNumber) {
 }
 </script>
 
-<style>
-
+<style scoped>
+.card{
+    user-select: none;
+    -webkit-user-drag: none;
+}
 </style>

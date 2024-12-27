@@ -31,6 +31,7 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
 
             if (lastUser?.Role != myRole || forseFollow)
             {
+                Console.WriteLine("跟牌");
                 // 跟牌
                 var result = (await _patterns[game.LastCardSentence.PatternType]
                                   .GetBaseAndNeedle(gameUser.Cards, game.LastCardSentence))
@@ -57,9 +58,10 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
                             min = cnt.Item1;
                         }
                     }
+                    Console.WriteLine("找到了跟牌, " + minCard.Count);
                     var neededSingleCount = game.LastCardSentence.Cards.Count - minCard.Count;
                     var reservedCards = gameUser.Cards.ToList().Except(minCard).ToList();
-
+                    Console.WriteLine("还要 " + minCard.Count + "张单牌");
                     for (var i = 0; i < neededSingleCount; i++)
                     {
                         var res = await _patterns[CardPatternType.Single]
@@ -91,6 +93,7 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
                 {
                     if (lastUser is { Cards: { Count: < 8 } } && gameUser.Role != lastUser.Role)
                     {
+                        Console.WriteLine("要炸");
                         // 要炸!
                         var bomb = gameUser.Cards.CountBy(t => t.Number).Where(t => t.Value == 4).ToList();
 
@@ -101,6 +104,7 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
                         }
 
                         // 王炸!
+                        Console.WriteLine("王炸");
                         if (gameUser.Cards.Any(t => t.Number == CardNumber.SmallJoker) &&
                             gameUser.Cards.Any(t => t.Number == CardNumber.BigJoker))
                         {

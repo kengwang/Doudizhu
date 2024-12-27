@@ -4,7 +4,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Doudizhu.Api", "Doudizhu.Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Doudizhu.Tests", "Doudizhu.Api\Doudizhu.Tests\Doudizhu.Tests.csproj", "{499898A7-A87E-4B18-A884-49180E1C835D}"
 EndProject
-Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "Doudizhu.ClientApp", "Doudizhu.ClientApp\Doudizhu.ClientApp.esproj", "{0FF9B578-FE45-419E-95A1-28C8F119486A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Doudizhu.Common", "Doudizhu.Common\Doudizhu.Common.csproj", "{D24DAE09-B79F-493E-81E2-555DD4D841D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,9 +20,9 @@ Global
 		{499898A7-A87E-4B18-A884-49180E1C835D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{499898A7-A87E-4B18-A884-49180E1C835D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{499898A7-A87E-4B18-A884-49180E1C835D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0FF9B578-FE45-419E-95A1-28C8F119486A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0FF9B578-FE45-419E-95A1-28C8F119486A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0FF9B578-FE45-419E-95A1-28C8F119486A}.Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{0FF9B578-FE45-419E-95A1-28C8F119486A}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{D24DAE09-B79F-493E-81E2-555DD4D841D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D24DAE09-B79F-493E-81E2-555DD4D841D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D24DAE09-B79F-493E-81E2-555DD4D841D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D24DAE09-B79F-493E-81E2-555DD4D841D2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,12 +1,12 @@
 ﻿using System.Security.Claims;
 using System.Text.Json.Serialization;
-using Doudizhu.Api.Service.Repositories;
+using Doudizhu.Api.Service.GameService;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace Doudizhu.Api.Endpoints.User;
 
-public class UserLoginEndpoint(ApplicationDbContext dbContext) : 
+public class UserLoginEndpoint(GameContainer gameContainer) : 
     Endpoint<UserLoginRequest, Results<Ok<Models.User>,NotFound>>
 {
     public override void Configure()
@@ -17,7 +17,7 @@ public class UserLoginEndpoint(ApplicationDbContext dbContext) :
 
     public override async Task<Results<Ok<Models.User>,NotFound>> ExecuteAsync(UserLoginRequest req, CancellationToken ct)
     {
-        var user = await dbContext.Users.FirstOrDefaultAsync(t => t.Qq == req.Qq, cancellationToken: ct);
+        var user = gameContainer.Users.FirstOrDefault(t => t.Qq == req.Qq);
 
         if (user is null)
         {

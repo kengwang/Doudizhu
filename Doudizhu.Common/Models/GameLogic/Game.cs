@@ -19,8 +19,7 @@ public class Game : GuidModelBase
 
     private static List<Card>? _allCards = null;
     
-    [JsonIgnore]
-    public IGameInteractor? CurrentInteractor;
+    public int? CurrentInteractorIndex;
     
     public static List<Card> GetAllCards()
     {
@@ -29,10 +28,10 @@ public class Game : GuidModelBase
             _allCards = new();
             for (var i = 0; i < 52; i++)
             {
-                _allCards.Add(new((CardNumber)(i % 13), (CardColor)(i / 4)));
+                _allCards.Add(new Card((CardNumber)(i % 13), (CardColor)(i % 4)));
             }
-            _allCards.Add(new(CardNumber.SmallJoker, CardColor.Special));
-            _allCards.Add(new(CardNumber.BigJoker, CardColor.Special));
+            _allCards.Add(new Card(CardNumber.SmallJoker, CardColor.Special));
+            _allCards.Add(new Card(CardNumber.BigJoker, CardColor.Special));
         }
 
         return _allCards.ToList();

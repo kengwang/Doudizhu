@@ -21,6 +21,7 @@ const props = defineProps<{
     box-sizing: border-box;
     height: 72px;
     padding: 16px;
+    background-color: #f5f5f5;
 }
 
 .avatar {

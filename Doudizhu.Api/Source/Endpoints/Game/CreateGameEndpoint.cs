@@ -1,15 +1,14 @@
 ﻿using System.Security.Claims;
 using Doudizhu.Api.Models;
 using Doudizhu.Api.Models.GameLogic;
+using Doudizhu.Api.Service.GameService;
 using Doudizhu.Api.Service.Hubs;
-using Doudizhu.Api.Service.Repositories;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Doudizhu.Api.Endpoints.Game;
-
-public class CreateGameEndpoint(ApplicationDbContext dbContext)
+public class CreateGameEndpoint(GameContainer gameContainer)
     : EndpointWithoutRequest<Results<CreatedAtRoute<Models.GameLogic.Game>, BadRequest<string>, ForbidHttpResult>>
 {
     public override void Configure()
@@ -26,14 +25,14 @@ public class CreateGameEndpoint(ApplicationDbContext dbContext)
         {
             return TypedResults.Forbid();
         }
-        var user = await dbContext.Users.FirstOrDefaultAsync(t => t.Id == userId, cancellationToken: ct);
+        var user = gameContainer.Users.FirstOrDefault(t => t.Id == userId);
 
         if (user is null)
         {
             return TypedResults.Forbid();
         }
 
-        if ((await dbContext.GameUsers.FirstOrDefaultAsync(t => t.User.Id == userId, cancellationToken: ct)) is not null)
+        if ((gameContainer.GetGames().SelectMany(t=>t.Users).FirstOrDefault(t => t.User.Id == userId)) is not null)
         {
             return TypedResults.BadRequest("用户已经加入游戏");
         }
@@ -57,9 +56,7 @@ public class CreateGameEndpoint(ApplicationDbContext dbContext)
         };
         game.Users.Add(gameUser);
 
-        await dbContext.Games.AddAsync(game, ct);
-        await dbContext.GameUsers.AddAsync(gameUser, ct);
-        await dbContext.SaveChangesAsync(ct);
+        gameContainer.AddGame(game);
 
         return TypedResults.CreatedAtRoute(game, nameof(GetGameEndpoint), new {id = game.Id});
     }

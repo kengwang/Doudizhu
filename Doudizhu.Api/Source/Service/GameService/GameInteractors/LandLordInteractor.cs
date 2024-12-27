@@ -3,14 +3,14 @@ using Doudizhu.Api.Interfaces.Markers;
 using Doudizhu.Api.Models.GameLogic;
 using Doudizhu.Api.Service.CardService;
 using Doudizhu.Api.Service.Hubs;
-using Doudizhu.Api.Service.Repositories;
 using Microsoft.AspNetCore.SignalR;
 
 namespace Doudizhu.Api.Service.GameService;
 
 public class LandLordInteractor(
     IHubContext<GameHub, IClientNotificator> hubContext,
-    AutoCardMachineService machineService
+    AutoCardMachineService machineService,
+    IServiceScopeFactory scopeFactory
     ) : IRegisterSelfScopedService,
         IRegisterScopedServiceFor<IGameInteractor>,
         IGameInteractor
@@ -20,17 +20,16 @@ public class LandLordInteractor(
     {
         gameUser.CalledLandLordCount = count;
         await hubContext.Clients.Group(game.Id.ToString()).UserCalledLandLord(gameUser, count);
-        await IGameInteractor.GameCancellationTokenSource[game.Id].CancelAsync();
     }
 
 
     public int Index => 1;
     public async Task EnterInteraction(Game game)
     { 
+        await hubContext.Clients.Group(game.Id.ToString()).RequireCallLandLord(game);
         foreach (var gameUser in game.Users)
         {
             IGameInteractor.GameCancellationTokenSource[game.Id] = new();
-            await hubContext.Clients.Group(game.Id.ToString()).RequireCallLandLord(game, gameUser);
             try
             {
                 if (gameUser.BotTakeOver)
@@ -40,7 +39,7 @@ public class LandLordInteractor(
                 }
                 else
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(15), IGameInteractor.GameCancellationTokenSource[game.Id].Token);
+                    await Task.Delay(TimeSpan.FromSeconds(10));
                     gameUser.CalledLandLordCount = 0;
                 }
 
@@ -60,11 +59,13 @@ public class LandLordInteractor(
             {
                 gameUser.Role = GameUserRole.Landlord;
                 gameUser.Cards.AddRange(game.ReservedCards);
+                await hubContext.Clients.User(gameUser.User.Id.ToString()).ReceiveCards(gameUser.Cards.OrderByDescending(t=>t.Number).ToList());
             }
             else
             {
                 gameUser.Role = GameUserRole.Farmer;
             }
         }
+        await hubContext.Clients.Group(game.Id.ToString()).LandLordSelected(landLordUser);
     }
 }

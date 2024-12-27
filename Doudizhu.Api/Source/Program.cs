@@ -1,8 +1,11 @@
 using AsyncAwaitBestPractices;
 using Doudizhu.Api.Extensions.DependencyInjection;
 using Doudizhu.Api.Models;
+using Doudizhu.Api.Models.GameLogic;
+using Doudizhu.Api.Service.GameService;
 using Doudizhu.Api.Service.Hubs;
-using Doudizhu.Api.Service.Repositories;
+
+using Doudizhu.Common;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -12,17 +15,10 @@ builder.Services.AddAuthorization();
 builder.Services.AddFastEndpoints(o => o.SourceGeneratorDiscoveredTypes.AddRange(DiscoveredTypes.All))
        .SwaggerDocument();
 builder.Services.AddSignalR();
-builder.Services.AddDbContextPool<ApplicationDbContext>(
-    option =>
-    {
-        option.UseInMemoryDatabase("database");
-    });
-builder.Services.Configure<JwtCreationOptions>(
-    opt =>
-    {
-        opt.SigningKey = Constants.JwtSigningKey;
-    });
+builder.Services.AddSingleton<GameContainer>();
 builder.Services.AddDependencyInjectionMarkerFrom<Program>();
+builder.Services.AddDependencyInjectionMarkerFrom<Marker>();
+builder.Services.AddDependencyInjectionImplements<CardPattern, CardPattern>();
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(
@@ -55,4 +51,4 @@ if (app.Environment.IsDevelopment())
 SafeFireAndForgetExtensions.Initialize(false);
 app.UseSwaggerGen();
 app.MapHub<GameHub>("/hub/game");
-app.Run();
+app.Run("http://*:44460");

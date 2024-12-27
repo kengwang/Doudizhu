@@ -1,10 +1,10 @@
 ﻿using System.Security.Claims;
-using Doudizhu.Api.Service.Repositories;
+using Doudizhu.Api.Service.GameService;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace Doudizhu.Api.Endpoints.User;
 
-public class GetUserStatusEndpoint(ApplicationDbContext dbContext) : Ep.NoReq.Res<Results<Ok<Models.User>, NotFound>>
+public class GetUserStatusEndpoint(GameContainer gameContainer) : Ep.NoReq.Res<Results<Ok<Models.User>, NotFound>>
 {
     public override void Configure()
     {
@@ -22,7 +22,7 @@ public class GetUserStatusEndpoint(ApplicationDbContext dbContext) : Ep.NoReq.Re
         {
             return TypedResults.NotFound();
         }
-        var user = await dbContext.Users.FindAsync([userId], ct);
+        var user = gameContainer.Users.FirstOrDefault(t=>t.Id == userId);
         
         if (user == null)
         {

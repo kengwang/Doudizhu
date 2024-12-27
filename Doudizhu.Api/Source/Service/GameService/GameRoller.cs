@@ -13,15 +13,13 @@ public class GameRoller(IHubContext<GameHub, IClientNotificator> hubContext,
 
     public async Task StartGameRoll(Game game)
     {
-        // notify game started
         await hubContext.Clients.Group(game.Id.ToString()).GameStarted(game);
-
-        foreach (var gameInteractor in _interactors)
+        await Task.Delay(5000);
+        for (var index = 0; index < _interactors.Count; index++)
         {
-            game.CurrentInteractor = gameInteractor;
+            game.CurrentInteractorIndex = index;
+            var gameInteractor = _interactors[index];
             await gameInteractor.EnterInteraction(game);
         }
-
-        // shuffle cards
     }
 }

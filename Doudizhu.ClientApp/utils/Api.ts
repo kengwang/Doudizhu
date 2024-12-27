@@ -10,6 +10,8 @@
  */
 
 export type DoudizhuApiModelsGameLogicGame = DoudizhuApiModelsGuidModelBase & {
+  /** @format int32 */
+  currentInteractorIndex?: number | null;
   /** @format date-time */
   createAt?: string;
   users?: DoudizhuApiModelsGameLogicGameUser[];
@@ -117,6 +119,13 @@ export enum DoudizhuApiModelsGameLogicGameStatus {
   Starting = 1,
   Running = 2,
   Ended = 3,
+}
+
+export interface DoudizhuApiEndpointsGameGameUsersCallLandlordPointRequest {
+  /** @format guid */
+  gameUser?: string;
+  /** @format int32 */
+  point?: number;
 }
 
 export interface DoudizhuApiEndpointsGameRecordsPlayCardRequest {
@@ -353,6 +362,28 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * No description
      *
      * @tags Games
+     * @name CallLandlordPointEndpoint
+     * @request POST:/api/games/{id}/gameUsers/callLandlordPoint
+     * @secure
+     */
+    callLandlordPointEndpoint: (
+      id: string,
+      data: DoudizhuApiEndpointsGameGameUsersCallLandlordPointRequest,
+      params: RequestParams = {},
+    ) =>
+      this.request<string, string>({
+        path: `/api/games/${id}/gameUsers/callLandlordPoint`,
+        method: "POST",
+        body: data,
+        secure: true,
+        type: ContentType.Json,
+        ...params,
+      }),
+
+    /**
+     * No description
+     *
+     * @tags Games
      * @name CreateGameEndpoint
      * @request POST:/api/games
      * @secure
@@ -477,7 +508,7 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
      * @request POST:/api/user/register
      */
     userRegisterEndpoint: (data: DoudizhuApiEndpointsUserUserRegisterRequest, params: RequestParams = {}) =>
-      this.request<string, any>({
+      this.request<string, string>({
         path: `/api/user/register`,
         method: "POST",
         body: data,

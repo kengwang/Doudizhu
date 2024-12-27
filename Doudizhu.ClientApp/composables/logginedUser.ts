@@ -1,3 +1,4 @@
+import { defineStore } from "pinia"
 import type { User } from "./models"
 
 export const useLogginedUser = defineStore("logginedUser", () => {

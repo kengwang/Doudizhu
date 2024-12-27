@@ -2,14 +2,13 @@
 using Doudizhu.Api.Models.GameLogic;
 using Doudizhu.Api.Service.CardService;
 using Doudizhu.Api.Service.GameService;
-using Doudizhu.Api.Service.Repositories;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 namespace Doudizhu.Api.Endpoints.Game.Records;
 
-public class PlayCardEndpoint(ApplicationDbContext dbContext,
-                              GameCardPlayIntereactor playIntereactor,
+public class PlayCardEndpoint(GameCardPlayIntereactor playIntereactor,
+                              GameContainer gameContainer,
                               CardSentenizer cardSentenizer,
                               IEnumerable<CardPattern> patterns)
     : Endpoint<PlayCardRequest, Results<Ok, BadRequest, NotFound>>
@@ -25,19 +24,10 @@ public class PlayCardEndpoint(ApplicationDbContext dbContext,
                                                                                CancellationToken ct)
     {
         var gameId = Route<Guid>("id");
-        var game = dbContext.Games
-                            .Include(game => game.Users)
-                            .ThenInclude(gameUser => gameUser.User)
-                            .Include(game => game.Records)
-                            .ThenInclude(gameRecord => gameRecord.CardSentence)
-                            .Include(game => game.Records)
-                            .ThenInclude(gameRecord => gameRecord.GameUser)
-                            .ThenInclude(gameUser => gameUser.User)
-                            .FirstOrDefault(t => t.Id == gameId);
-
-        if (game is null || game.Status != GameStatus.Running)
+        var game = gameContainer.GetGame(gameId);
+        if (game is null)
             return TypedResults.NotFound();
-
+        game.Status = GameStatus.Running;
         var userId = User.Claims.FirstOrDefault(t => t.Type == ClaimTypes.NameIdentifier)?.Value;
         var gameUser = game.Users.First(t => t.User.Id.ToString() == userId);
         CardSentence? cardSentence = null;
@@ -48,17 +38,22 @@ public class PlayCardEndpoint(ApplicationDbContext dbContext,
             cardSentence = cardSentenizer.Sentenize(req.Cards);
 
             if (cardSentence is null)
+            {
+                Console.WriteLine("不能打");
                 return TypedResults.BadRequest();
+            }
+
         }
         else
         {
             if (lastSentence?.CardSentence is null || lastSentence.GameUser.User.Id.ToString() == userId)
             {
                 // 应该你出牌, 你不出
+                Console.WriteLine("你没出");
                 return TypedResults.BadRequest();
             }
         }
-
+        
 
         if (cardSentence is not null)
         {
@@ -67,7 +62,11 @@ public class PlayCardEndpoint(ApplicationDbContext dbContext,
                 var canCover = _patterns[cardSentence.PatternType].CanCover(cardSentence, lastSentence.CardSentence);
 
                 if (!canCover)
+                {
+                    Console.WriteLine("打不过");
                     return TypedResults.BadRequest();
+
+                }
             }
         }
         
@@ -75,7 +74,6 @@ public class PlayCardEndpoint(ApplicationDbContext dbContext,
             game,
             gameUser,
             cardSentence);
-        await dbContext.SaveChangesAsync(ct);
         return TypedResults.Ok();
     }
 }

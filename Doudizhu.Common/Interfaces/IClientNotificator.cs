@@ -7,10 +7,11 @@ public interface IClientNotificator
     Task UserJoined(GameUser user);
     Task GameStarted(Game game);
     Task ReceiveCards(List<Card> cards);
-    Task RequireCallLandLord(Game game, GameUser user);
+    Task RequireCallLandLord(Game game);
     Task UserCalledLandLord(GameUser user, int count);
+    Task LandLordSelected(GameUser user);
     Task UserPlayCards(GameUser user, CardSentence? cardSentence);
-    Task RequirePlayCards(Game game, GameUser user);
+    Task RequirePlayCards(GameUser user);
     Task EndGame(Game game, GameUser winner);
 
 }

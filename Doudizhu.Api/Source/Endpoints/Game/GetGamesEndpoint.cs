@@ -1,9 +1,10 @@
-﻿using Doudizhu.Api.Service.Repositories;
+﻿
+using Doudizhu.Api.Service.GameService;
 using Microsoft.EntityFrameworkCore;
 
 namespace Doudizhu.Api.Endpoints.Game;
 
-public class GetGamesEndpoint(ApplicationDbContext dbContext) : Ep.NoReq.Res<List<Models.GameLogic.Game>>
+public class GetGamesEndpoint(GameContainer gameContainer) : Ep.NoReq.Res<List<Models.GameLogic.Game>>
 {
     public override void Configure()
     {
@@ -12,8 +13,6 @@ public class GetGamesEndpoint(ApplicationDbContext dbContext) : Ep.NoReq.Res<Lis
 
     public override async Task<List<Models.GameLogic.Game>> ExecuteAsync(CancellationToken ct)
     {
-        return await dbContext.Games
-                       .Include(g => g.Users)
-                       .ToListAsync(cancellationToken: ct);
+        return gameContainer.GetGames();
     }
 }

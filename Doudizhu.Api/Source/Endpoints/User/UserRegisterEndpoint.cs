@@ -1,10 +1,11 @@
-﻿using Doudizhu.Api.Service.Repositories;
+﻿
+using Doudizhu.Api.Service.GameService;
 using Microsoft.AspNetCore.Http.HttpResults;
 using NJsonSchema.Annotations;
 
 namespace Doudizhu.Api.Endpoints.User;
 
-public class UserRegisterEndpoint(ApplicationDbContext dbContext) : Endpoint<UserRegisterRequest, Created<Models.User>>
+public class UserRegisterEndpoint(GameContainer gameContainer) : Endpoint<UserRegisterRequest, Results<Created<Models.User>, BadRequest>>
 {
     public override void Configure()
     {
@@ -12,16 +13,20 @@ public class UserRegisterEndpoint(ApplicationDbContext dbContext) : Endpoint<Use
         AllowAnonymous();
     }
 
-    public override async Task<Created<Models.User>> ExecuteAsync(UserRegisterRequest req, CancellationToken ct)
+    public override async Task<Results<Created<Models.User>, BadRequest>> ExecuteAsync(UserRegisterRequest req, CancellationToken ct)
     {
+        if (string.IsNullOrEmpty(req.UserName) || string.IsNullOrEmpty(req.Qq))
+        {
+            return TypedResults.BadRequest();
+        }
         var user = new Models.User
         {
+            Id = Guid.CreateVersion7(),
             Name = req.UserName,
             Coin = 100,
             Qq = req.Qq
         };
-        dbContext.Users.Add(user);
-        await dbContext.SaveChangesAsync(ct);
+        gameContainer.Users.Add(user);
 
         return TypedResults.Created("/user/" + user.Id, user);
     }
