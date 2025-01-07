@@ -44,8 +44,13 @@ public class MultiPairPattern : CardPattern
 
         // get constants
         var targetCount = lastCardSentence?.Cards.Count / 2 ?? -1;
-        var startCardNumber =
-            (int?)lastCardSentence?.Cards.CountBy(t => t.Number).Where(t => t.Value == 4).MinBy(t => t.Key).Key ?? -1;
+        
+        var tmp =  lastCardSentence?.Cards.CountBy(t => t.Number).Where(t => t.Value == 4).ToList();
+        if (tmp is null || tmp.Count == 0)
+        {
+            return new();
+        }
+        var startCardNumber =  (int?)tmp.MinBy(t => t.Key).Key ?? -1;
         var nextShouldBe = -1;
         var accumulate = 0;
         List<(CardNumber validStart, CardNumber end)> validRanges = [];

@@ -45,7 +45,8 @@ public class FourWithPairPattern : CardPattern
 
         if (lastSentence?.Cards is { Count: > 1 })
         {
-            baseCard =(int)lastSentence.Cards.CountBy(t => t.Number).Where(t => t.Value == 4).MinBy(t => t.Key).Key;
+            var tmp = lastSentence.Cards.CountBy(t => t.Number).Where(t => t.Value == 4).ToList();
+            baseCard =(int)tmp.MinBy(t => t.Key).Key;
         }
         var counts = cards.CountBy(t => t.Number).Where(t => t.Value == 4).Where(t=>(int)t.Key > baseCard).Select(t => t.Key).ToList();
         var avas = cards.Where(t => counts.Contains(t.Number)).GroupBy(t => t.Number).Select(t => (baseCards: t.ToList(), count: 2)).ToList();

@@ -18,8 +18,8 @@ public class GameCardPlayIntereactor(IHubContext<GameHub, IClientNotificator> hu
         if (cardSentence is not null)
         {
             game.LastCardSentence = cardSentence;
+            game.LastUser = gameUser;
         }
-        game.LastUser = gameUser;
         game.Records.Add(
             new()
             {
@@ -29,7 +29,7 @@ public class GameCardPlayIntereactor(IHubContext<GameHub, IClientNotificator> hu
             });
         var cards = cardSentence?.Cards;
         if (cards is { Count: > 0 })
-            gameUser.Cards = gameUser.Cards.Except(cards).ToList();
+            gameUser.Cards.RemoveAll(t=>cards.Any(c=>t.Number == c.Number && t.Number == c.Number));
         await hubContext.Clients.Group(game.Id.ToString()).UserPlayCards(gameUser, cardSentence);
         await IGameInteractor.GameCancellationTokenSource[game.Id].CancelAsync();
     }

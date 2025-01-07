@@ -6,27 +6,28 @@
         </v-row>
         <v-row align="start" no-gutters>
             <!-- left -->
-            <v-col cols="2" v-if="currentGame.joinedUsers?.length ?? 0 > 0">
-                <UserInfo :signature="currentGame.joinedUsers?.[0]?.user?.coin?.toString() ?? ''"
-                    :name="currentGame.joinedUsers?.[0]?.user?.name ?? ''"
-                    :qq="currentGame.joinedUsers?.[0]?.user?.qq ?? ''" />
-                <div v-if="currentGame.landlordId == currentGame.joinedUsers?.[0]?.id" class="bg-yellow">地主</div>
-                <Clock v-if="currentGame.currentUserId == currentGame.joinedUsers?.[0]?.id" />
+            <v-col cols="2">
+                <div v-if="currentGame.joinedUsers?.length ?? 0 > 0">
+                    <UserInfo :signature="currentGame.joinedUsers?.[0]?.user?.coin?.toString() ?? ''"
+                        :name="currentGame.joinedUsers?.[0]?.user?.name ?? ''"
+                        :qq="currentGame.joinedUsers?.[0]?.user?.qq ?? ''" />
+                    <div v-if="currentGame.landlordId == currentGame.joinedUsers?.[0]?.id" class="bg-yellow">地主</div>
+                    <Clock v-if="currentGame.currentUserId == currentGame.joinedUsers?.[0]?.id" />
+                </div>
+                <div style="margin-top: 15px;" v-if="currentGame.joinedUsers?.length ?? 0 > 1">
+                    <UserInfo :signature="currentGame.joinedUsers?.[1]?.user?.coin?.toString() ?? ''"
+                        :name="currentGame.joinedUsers?.[1]?.user?.name ?? ''"
+                        :qq="currentGame.joinedUsers?.[1]?.user?.qq ?? ''" />
+                    <div v-if="currentGame.landlordId == currentGame.joinedUsers?.[1]?.id" class="bg-yellow">地主</div>
+                    <Clock v-if="currentGame.currentUserId == currentGame.joinedUsers?.[1]?.id" />
+                </div>
             </v-col>
             <!-- middle -->
-            <v-col cols="2" v-if="currentGame.joinedUsers?.length ?? 0 > 1">
+            <v-col cols="8">
                 <v-row align="start" justify="center" no-gutters>
-                    <Card :height="50" :number="card.number ?? 0" :color="card.color ?? 0"
+                    <Card :height="150" :number="card.number ?? 0" :color="card.color ?? 0"
                         v-for="card in currentGame.lastCards" :key="`${card.color}-${card.number}`" />
                 </v-row>
-            </v-col>
-            <!-- right -->
-            <v-col cols="2" offset="6" v-if="currentGame.joinedUsers?.length ?? 0 > 1">
-                <UserInfo :signature="currentGame.joinedUsers?.[1]?.user?.coin?.toString() ?? ''"
-                    :name="currentGame.joinedUsers?.[1]?.user?.name ?? ''"
-                    :qq="currentGame.joinedUsers?.[1]?.user?.qq ?? ''" />
-                <div v-if="currentGame.landlordId == currentGame.joinedUsers?.[1]?.id" class="bg-yellow">地主</div>
-                <Clock v-if="currentGame.currentUserId == currentGame.joinedUsers?.[1]?.id" />
             </v-col>
         </v-row>
         <v-row align="end" style="max-height: 400px; margin-bottom: 8px;" no-gutters>

@@ -19,7 +19,7 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
         if (!_predictorStates.ContainsKey(game.Id))
             _predictorStates[game.Id] = new();
 
-        if (game.LastCardSentence is not null)
+        if (game.LastCardSentence is not null && game.LastUser != gameUser)
         {
             // 获取我的当前身份
             var myRole = gameUser.Role;
@@ -28,7 +28,7 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
             // 获取我的上家的身份
             var lastUser = game.Records.LastOrDefault()?.GameUser;
             playFollowCard:
-
+            Console.WriteLine("上家是" + lastUser?.Role + " 我是" + myRole);
             if (lastUser?.Role != myRole || forseFollow)
             {
                 Console.WriteLine("跟牌");
@@ -41,8 +41,11 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
 
                 if (result.Count != 0)
                 {
+                    
                     foreach (var (baseCards, count) in result)
                     {
+                        PrintCards(baseCards);
+                        Console.WriteLine("找到了跟牌, " + baseCards.Count);
                         var variableCards = gameUser.Cards.ToList();
 
                         foreach (var card in baseCards)
@@ -50,15 +53,23 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
                             variableCards.Remove(card);
                         }
 
-                        var cnt = await GetCardSingleCount(variableCards, game.LastCardSentence, [baseCards]);
-
-                        if (cnt.Item1 < min)
+                        try
                         {
-                            minCard = baseCards;
-                            min = cnt.Item1;
+                            var cnt = await GetCardSingleCount(variableCards, game.LastCardSentence, [baseCards]);
+                            Console.WriteLine("还剩 " + cnt.Item1 + "张单牌");
+                            if (cnt.Item1 < min)
+                            {
+                                minCard = baseCards;
+                                min = cnt.Item1;
+                            }
                         }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+                        
                     }
-                    Console.WriteLine("找到了跟牌, " + minCard.Count);
+                    Console.WriteLine("最佳跟牌, " + minCard.Count);
                     var neededSingleCount = game.LastCardSentence.Cards.Count - minCard.Count;
                     var reservedCards = gameUser.Cards.ToList().Except(minCard).ToList();
                     Console.WriteLine("还要 " + minCard.Count + "张单牌");
@@ -71,6 +82,7 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
 
                         foreach ((List<Card> baseCards, int count) in res)
                         {
+                            Console.WriteLine("单牌我打 " + baseCards[0].Number);
                             var tmpCards = reservedCards.ToList();
                             tmpCards.Remove(baseCards[0]);
                             var (singleCnt, _) = await GetCardSingleCount(tmpCards, null, []);
@@ -121,7 +133,7 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
             {
                 // 上家和自己同一阵营
                 // 记牌器, 计算场上剩下的牌
-
+                
                 // 正常记牌
                 var leftCards = Game.GetAllCards();
 
@@ -134,11 +146,11 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
                 {
                     leftCards.Remove(card);
                 }
-
+                
                 // 计算场上剩下的牌
                 var partner = game.Users.FirstOrDefault(t => t != gameUser && t.Role == GameUserRole.Farmer);
                 var leftPartnerCardCount = partner?.Cards.Count ?? 0;
-
+                Console.WriteLine("剩下的牌 " + leftCards.Count + " 我的队友" + leftPartnerCardCount);
                 if (leftPartnerCardCount < 5)
                     return [];
 
@@ -153,12 +165,14 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
                 !game.Users.Any(t => t != gameUser && t is { Role: GameUserRole.Farmer, Cards.Count: < 4 }))
             {
                 // 挺好的, 正常出, 不需要考虑喂牌
+                Console.WriteLine("挺好的, 正常出, 不需要考虑喂牌");
                 var trace = new List<List<Card>>();
                 var (min, minTrace) = await GetCardSingleCount(gameUser.Cards, null, trace);
 
                 // 主动出牌
                 if (min * 1.0 / gameUser.Cards.Count > 0.20) // 走不脱, 把单牌清理一下
                 {
+                    Console.WriteLine("走不脱, 把单牌清理一下");
                     var flattend = trace.SelectMany(t => t).ToList();
                     var singleCards = gameUser.Cards.ToList();
 
@@ -170,7 +184,7 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
                     // get all which CardNumber only appear once
                     var numbers = singleCards.CountBy(p => p.Number).Where(t => t.Value == 1).Select(t => t.Key)
                                              .ToList();
-                    var singleCard = singleCards.Where(t => numbers.Contains(t.Number)).OrderBy(t => t.Number)
+                    var singleCard = singleCards.Where(t => numbers.Contains(t.Number)).OrderByDescending(t => t.Number)
                                                 .FirstOrDefault();
 
                     if (singleCard is not null)
@@ -178,46 +192,55 @@ public class AutoCardMachineService(IEnumerable<CardPattern> patterns) : IRegist
                 }
                 else
                 {
-                    return minTrace[0];
+                    Console.WriteLine("挺好的, 正常出, 不需要考虑喂牌");
+                    
+                    return minTrace[^1];
                 }
             }
             else
             {
                 // 考虑喂牌
+                Console.WriteLine("考虑喂牌");
                 var partner = game.Users.FirstOrDefault(t => t != gameUser && t.Role == GameUserRole.Farmer);
 
                 if (partner?.Cards.Count == 1)
                 {
                     // 最小的牌喂走
+                    Console.WriteLine("最小的牌喂走");
                     return [gameUser.Cards.MinBy(t => t.Number)!];
                 }
 
                 if (partner?.Cards.Count < 4)
                 {
+                    Console.WriteLine("队友牌少于4张");
                     if (_predictorStates[game.Id].PartnerTriedPairLastCount != partner.Cards.Count)
                     {
+                        Console.WriteLine("尝试对子失败, 单张");
                         return [gameUser.Cards.MinBy(t => t.Number)!];
                     }
                     else
                     {
+                        Console.WriteLine("尝试对子");
                         _predictorStates[game.Id].PartnerTriedPairLastCount = partner.Cards.Count;
                         var res = await _patterns[CardPatternType.Pair].GetBaseAndNeedle(gameUser.Cards, null);
 
                         if (res.Count > 0)
                         {
+                            Console.WriteLine("打最小对子");
                             var min = res.MinBy(t => t.baseCards[0].Number);
 
                             return min.baseCards;
                         }
                         else
                         {
+                            Console.WriteLine("没对子, 打单张");
                             return [gameUser.Cards.MinBy(t => t.Number)!];
                         }
                     }
                 }
             }
         }
-
+        Console.WriteLine("你怎么到这里了?");
         return [];
     }
 

@@ -5,17 +5,16 @@
             <v-btn @click="onPlay" color="green">出牌</v-btn>
             <Clock />
         </div>
-    <div class="selectable-cards">
-        <div class="container">
-            <transition name="bounce" v-for="card in cards" :key="`${card.number}-${card.color}`">
-                <Card :isSelected="selectedCards.includes(card)"
-                    @click="onSelect(card)" :id="`${card.number}-${card.color}`" :height="200"
-                    :color="card.color ?? 0" :number="card.number ?? 0" class="card"
-                    :class="{ 'selected': selectedCards.includes(card) }" />
-            </transition>
+        <div class="selectable-cards">
+            <div class="container">
+                <transition name="bounce" v-for="card in cards" :key="`${card.number}-${card.color}`">
+                    <Card :isSelected="selectedCards.includes(card)" @click="onSelect(card)"
+                        :id="`${card.number}-${card.color}`" :height="200" :color="card.color ?? 0"
+                        :number="card.number ?? 0" class="card" :class="{ 'selected': selectedCards.includes(card) }" />
+                </transition>
+            </div>
         </div>
     </div>
-</div>
 </template>
 
 <script setup lang="ts">
@@ -48,10 +47,10 @@ function onPass() {
 const selectedCards = ref<DoudizhuApiModelsGameLogicCard[]>([]);
 
 function onSelect(cardId: DoudizhuApiModelsGameLogicCard) {
-  if(selectedCards.value.includes(cardId)) {
-    selectedCards.value=selectedCards.value.filter((card: DoudizhuApiModelsGameLogicCard) => card!==cardId);
-  } else {
-    selectedCards.value.push(cardId);
+    if (selectedCards.value.includes(cardId)) {
+        selectedCards.value = selectedCards.value.filter((card: DoudizhuApiModelsGameLogicCard) => card !== cardId);
+    } else {
+        selectedCards.value.push(cardId);
     }
 }
 </script>
@@ -103,5 +102,11 @@ function onSelect(cardId: DoudizhuApiModelsGameLogicCard) {
 
 .container {
     display: flex;
+}
+
+.card-action {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
 }
 </style>

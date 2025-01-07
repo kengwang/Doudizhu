@@ -6,7 +6,7 @@ const currentUser = useLogginedUser();
 
 async function connectGameHub() {
     connection = new signalR.HubConnectionBuilder()
-        .withUrl("http://192.168.110.170:44460/hub/game")
+        .withUrl("http://192.168.205.170:44460/hub/game")
         .withAutomaticReconnect()
         .withKeepAliveInterval(10000)
         .build();
@@ -33,6 +33,10 @@ async function connectGameHub() {
     connection.on("UserPlayCards", (user, cards) => {
         console.log("UserPlayCards", user, cards);
         currentGame.lastCards = cards.cards;
+        // 移除掉当前用户的牌
+        if (user.user.id === currentUser.logginedUser?.id) {
+            currentGame.cards = currentGame.cards.filter((c: DoudizhuApiModelsGameLogicCard) => !cards.cards.some((cc: DoudizhuApiModelsGameLogicCard) => cc.number === c.number && cc.color === c.color));
+        }
     });
 
     connection.on("LandLordSelected", (user) => { 
